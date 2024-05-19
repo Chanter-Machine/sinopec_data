@@ -2,14 +2,37 @@ import pandas as pd
 import numpy as np
 import yaml
 
-def read_sino_excel_to_df(excel_file_path):
-    dfs = pd.read_excel(excel_file_path, sheet_name=['Export'], header=None)
-    df = dfs['Export']
+def read_sino_report_excel_to_df(excel_file_path, sheet_name: str):
+    dfs = pd.read_excel(excel_file_path, sheet_name=[sheet_name], header=None)
+    df = dfs[sheet_name]
     df = df.drop(df.index[0])
     df.columns = df.iloc[0]
     df = df.drop(df.index[0])
     return df
 
+def read_raw_excel_to_df(excel_file_path, sheet_name: str):
+    dfs = pd.read_excel(excel_file_path, sheet_name=[sheet_name], header=None)
+    df = dfs[sheet_name]
+    df.columns = df.iloc[0]
+    df = df.drop(df.index[0])
+    return df
+
+def QoQ_calc(current_df: pd.DataFrame, previous_report: str ) -> pd.DataFrame:
+    previous_df = read_raw_excel_to_df(previous_report, 'Sheet1')
+    # 处理 previous_df
+    previous_df = previous_df[['站点', '充电量KW.h']].rename(columns={'充电量KW.h': '上周期充电量KW.h'})
+
+    # 合并 current_df 和 previous_df
+    current_df = current_df.merge(previous_df, on='站点', how='left')
+
+    # 计算充电量环比
+    current_df['充电量环比'] = (current_df['充电量KW.h'] - current_df['上周期充电量KW.h']) / current_df[
+        '上周期充电量KW.h']
+    current_df['充电量环比'] = current_df['充电量环比'] * 100
+    # 格式化充电量环比
+    current_df['充电量环比'] = current_df['充电量环比'].apply(lambda x: '{:.2f}%'.format(x))
+
+    return current_df
 
 pd.set_option('display.max_columns', None)
 
@@ -20,21 +43,12 @@ days_span = config['days_span']
 daily_charger_station_path = config['daily_charger_station_path']
 daily_charger_path = config['daily_charger_path']
 excel_output_path = config['excel_output_path']
+station_charger_count = config['recharge_station']
+need_QoQ = config['need_QoQ']
+QoQ_file = config.get('QoQ_file', '')
 
-station_charger_count = {
-    "福建-厦门-同安-梧侣充电站": (28, 6),
-    "福建-厦门-思明-文屏充电站": (46, 20),
-    "福建-厦门-思明-石油大厦停车场充电站": (0, 8),
-    "福建-厦门-湖里-前埔北充电站": (20, 0),
-    "福建-厦门-湖里-高殿充电站": (10, 0),
-    "福建-厦门-翔安-新曙路充电站": (12, 0)
-}
-# compare_weekly_report = config['daily_charger_station_path']
-
-daily_recharge_station = read_sino_excel_to_df(daily_charger_station_path)
-
-daily_charger = read_sino_excel_to_df(daily_charger_path)
-
+daily_recharge_station = read_sino_report_excel_to_df(daily_charger_station_path, 'Export')
+daily_charger = read_sino_report_excel_to_df(daily_charger_path, 'Export')
 
 # print(daily_report_df)
 
@@ -96,15 +110,15 @@ print(daily_charger_group_result)
 
 
 # print(merged_df)
-merged_df = pd.merge(result_df, daily_charger_group_result,
-                     left_on='站点',
-                     right_on='归属电站',
-                     how='left')
-merged_df['慢充电量（度）'] = merged_df['快慢冲度数']
-merged_df['慢充电量（度）'] = merged_df['慢充电量（度）'].apply(lambda x: x if x is not np.nan else 0)
-merged_df['快充电量（度）'] = merged_df['充电量KW.h'] - merged_df['慢充电量（度）']
-merged_df.loc[merged_df['快充枪数'] == 0, '快充电量（度）'] = 0
-merged_df.drop(columns=['归属电站', '快慢冲', '充电桩数量', '快慢冲度数'], inplace=True)
+current_week_df = pd.merge(result_df, daily_charger_group_result,
+                           left_on='站点',
+                           right_on='归属电站',
+                           how='left')
+current_week_df['慢充电量（度）'] = current_week_df['快慢冲度数']
+current_week_df['慢充电量（度）'] = current_week_df['慢充电量（度）'].apply(lambda x: x if x is not np.nan else 0)
+current_week_df['快充电量（度）'] = current_week_df['充电量KW.h'] - current_week_df['慢充电量（度）']
+current_week_df.loc[current_week_df['快充枪数'] == 0, '快充电量（度）'] = 0
+current_week_df.drop(columns=['归属电站', '快慢冲', '充电桩数量', '快慢冲度数'], inplace=True)
 # print(merged_df)
 def safe_divide(x, y):
     if y == 0:
@@ -112,29 +126,32 @@ def safe_divide(x, y):
     else:
         return x / y
 
-merged_df['单枪日均充电度数'] = merged_df.apply(lambda row: safe_divide(row['充电量KW.h']/days_span, row['在用抢数']), axis=1)
-merged_df['单枪日均快充度数'] = merged_df.apply(lambda row: safe_divide(row['快充电量（度）']/days_span, row['快充枪数']), axis=1)
-merged_df['单枪日均慢充度数'] = merged_df.apply(lambda row: safe_divide(row['慢充电量（度）']/days_span, row['慢充枪数']), axis=1)
+current_week_df['单枪日均充电度数'] = current_week_df.apply(lambda row: safe_divide(row['充电量KW.h'] / days_span, row['在用抢数']), axis=1)
+current_week_df['单枪日均快充度数'] = current_week_df.apply(lambda row: safe_divide(row['快充电量（度）'] / days_span, row['快充枪数']), axis=1)
+current_week_df['单枪日均慢充度数'] = current_week_df.apply(lambda row: safe_divide(row['慢充电量（度）'] / days_span, row['慢充枪数']), axis=1)
 # 选择数值类型的列
-numeric_columns = merged_df.select_dtypes(include=[np.number])
+numeric_columns = current_week_df.select_dtypes(include=[np.number])
 
-merged_df['充电量(万度)'] = merged_df['充电量(万度)'].apply(lambda x: round(x, 2))
-merged_df['电费(万元)'] = merged_df['电费(万元)'].apply(lambda x: round(x, 2))
-merged_df['服务费(万元)'] = merged_df['服务费(万元)'].apply(lambda x: round(x, 2))
-merged_df['实收金额(万元)'] = merged_df['实收金额(万元)'].apply(lambda x: round(x, 2))
-merged_df['度电服务费(元)'] = merged_df['度电服务费(元)'].apply(lambda x: round(x, 2))
-merged_df['度电营业额(元)'] = merged_df['度电营业额(元)'].apply(lambda x: round(x, 2))
+current_week_df['充电量(万度)'] = current_week_df['充电量(万度)'].apply(lambda x: round(x, 2))
+current_week_df['电费(万元)'] = current_week_df['电费(万元)'].apply(lambda x: round(x, 2))
+current_week_df['服务费(万元)'] = current_week_df['服务费(万元)'].apply(lambda x: round(x, 2))
+current_week_df['实收金额(万元)'] = current_week_df['实收金额(万元)'].apply(lambda x: round(x, 2))
+current_week_df['度电服务费(元)'] = current_week_df['度电服务费(元)'].apply(lambda x: round(x, 2))
+current_week_df['度电营业额(元)'] = current_week_df['度电营业额(元)'].apply(lambda x: round(x, 2))
 
 # 对数值类型的列应用 round 函数
-merged_df[numeric_columns.columns] = numeric_columns.map(lambda x: round(x, 2))
+current_week_df[numeric_columns.columns] = numeric_columns.map(lambda x: round(x, 2))
 
 def format_station_name(x):
     split_list = x.split('-')
     # 返回分割后的数组中的最后一个值
     return split_list[-1]
-merged_df['站点'] = merged_df['站点'].apply(format_station_name)
-print(merged_df)
+current_week_df['站点'] = current_week_df['站点'].apply(format_station_name)
+print(current_week_df)
 
 
-merged_df.to_excel(excel_output_path, index=False)
+if need_QoQ:
+    current_week_df = QoQ_calc(current_week_df, QoQ_file)
+
+current_week_df.to_excel(excel_output_path, index=False)
 

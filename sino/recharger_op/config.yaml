@@ -3,5 +3,14 @@
 daily_charger_station_path : './data/加油站充电销售日报2024.4.1-4.10.xls'
 daily_charger_path : './data/电桩充电统计2024.4.1-4.10.xls'
 excel_output_path : './output/厦门充电业务经营周报20240401-20240410.xlsx'
-compare_weekly_report : './output/厦门充电业务经营周报20240301-20240310.xlsx'
 days_span : 7
+recharge_station:
+  福建-厦门-同安-梧侣充电站: [ 28, 6 ]
+  福建-厦门-思明-文屏充电站: [ 46, 20 ]
+  福建-厦门-思明-石油大厦停车场充电站: [ 0, 8 ]
+  福建-厦门-湖里-前埔北充电站: [ 20, 0 ]
+  福建-厦门-湖里-高殿充电站: [ 10, 0 ]
+  福建-厦门-翔安-新曙路充电站: [ 12, 0 ]
+
+need_QoQ: true
+QoQ_file: './output/厦门充电业务经营周报20240301-20240310.xlsx'
