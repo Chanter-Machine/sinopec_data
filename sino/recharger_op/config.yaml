@@ -1,0 +1,7 @@
+
+
+daily_charger_station_path : './data/加油站充电销售日报2024.4.1-4.10.xls'
+daily_charger_path : './data/电桩充电统计2024.4.1-4.10.xls'
+excel_output_path : './output/厦门充电业务经营周报20240401-20240410.xlsx'
+compare_weekly_report : './output/厦门充电业务经营周报20240301-20240310.xlsx'
+days_span : 7
