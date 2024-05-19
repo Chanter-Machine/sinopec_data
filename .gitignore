@@ -160,3 +160,4 @@ cython_debug/
 #.idea/
 
 /sino/recharger_op/data/
+/sino/recharger_op/output/
