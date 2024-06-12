@@ -2,6 +2,9 @@ import pandas as pd
 import numpy as np
 import yaml
 
+from sino.recharger_op.draw import draw_stat_chart
+
+
 def read_sino_report_excel_to_df(excel_file_path, sheet_name: str):
     dfs = pd.read_excel(excel_file_path, sheet_name=[sheet_name], header=None)
     df = dfs[sheet_name]
@@ -46,6 +49,9 @@ excel_output_path = config['excel_output_path']
 station_charger_count = config['recharge_station']
 need_QoQ = config['need_QoQ']
 QoQ_file = config.get('QoQ_file', '')
+specify_cols_order = config['specify_cols_order']
+need_draw_chart = config['need_draw_chart']
+chart_config = config['chart_config']
 
 daily_recharge_station = read_sino_report_excel_to_df(daily_charger_station_path, 'Export')
 daily_charger = read_sino_report_excel_to_df(daily_charger_path, 'Export')
@@ -153,5 +159,15 @@ print(current_week_df)
 if need_QoQ:
     current_week_df = QoQ_calc(current_week_df, QoQ_file)
 
+
+current_week_df = current_week_df[specify_cols_order]
 current_week_df.to_excel(excel_output_path, index=False)
+
+#需要画图
+if need_draw_chart and need_QoQ:
+    # 抽取为数组
+    site_arr = current_week_df["站点"].values
+    charge_arr = current_week_df["充电量(万度)"].values
+    charge_QoQ_arr = current_week_df["上周期充电量KW.h"].values
+    draw_stat_chart(site_arr, charge_arr, charge_QoQ_arr, chart_config)
 

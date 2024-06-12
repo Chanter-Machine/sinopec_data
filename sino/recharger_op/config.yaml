@@ -14,3 +14,32 @@ recharge_station:
 
 need_QoQ: true
 QoQ_file: './output/厦门充电业务经营周报20240301-20240310.xlsx'
+specify_cols_order:
+  - 站点
+  - 充电量KW.h
+  - 电费
+  - 服务费
+  - 实收金额
+  - 在用抢数
+  - 快充枪数
+  - 慢充枪数
+  - 充电量(万度)
+  - 电费(万元)
+  - 服务费(万元)
+  - 实收金额(万元)
+  - 度电服务费(元)
+  - 度电营业额(元)
+  - 慢充电量（度）
+  - 快充电量（度）
+  - 单枪日均充电度数
+  - 单枪日均快充度数
+  - 单枪日均慢充度数
+  - 充电量环比
+  - 上周期充电量KW.h
+
+need_draw_chart: true
+chart_config:
+  bar_width : 0.3  # 调整此数值来更改柱状图的宽度，默认为0.8
+  line_label_x_offset : 0.35  # 调整偏移量，使其与柱状图脱离重叠
+  line_label_y_offset : -2  # 设置 y 轴方向的偏移量
+  fontsize : 18

@@ -2,5 +2,7 @@
 
 pandas
 openpyxl
-jupyter
 pyyaml
+matplotlib
+pyinstaller
+
