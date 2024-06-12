@@ -32,9 +32,9 @@ def draw_stat_chart(stations, charge_arr, charge_QoQ_arr, chart_config=None ):
     fig, ax1 = plt.subplots(figsize=(10, 6))
 
     # 电费柱状图
-    bars = ax1.bar(stations, charge_arr, width=bar_width, color=bar_color, label='电费')
-    ax1.set_xlabel('站点')
-    ax1.set_ylabel('电费 (元)', color=bar_color)
+    bars = ax1.bar(stations, charge_arr, width=bar_width, color=bar_color, label=chart_config.get("bar_label", '这是一个默认的xlabel'))
+    ax1.set_xlabel(chart_config.get("bar_label", '这是一个默认的bar_label'))
+    ax1.set_ylabel(chart_config.get("y1label", '这是一个默认的y1label'), color=bar_color)
     ax1.tick_params(axis='y', labelcolor=bar_color)
 
     # 在每个柱体上加上电费的值
@@ -45,8 +45,8 @@ def draw_stat_chart(stations, charge_arr, charge_QoQ_arr, chart_config=None ):
 
     # 创建第二个y轴用于电费环比折线图
     ax2 = ax1.twinx()
-    line, = ax2.plot(stations, charge_QoQ_arr, color=line_color, marker='o', label='电费环比')
-    ax2.set_ylabel('电费环比 (%)', color=line_color)
+    line, = ax2.plot(stations, charge_QoQ_arr, color=line_color, marker='o', label=chart_config.get("line_lable", '这是一个默认的line_lable'))
+    ax2.set_ylabel(chart_config.get("y2label", '这是一个默认的y2_lable'), color=line_color)
     ax2.tick_params(axis='y', labelcolor=line_color)
 
     # 在每个数据点上加上电费环比的值，修改字体大小为12
@@ -55,11 +55,11 @@ def draw_stat_chart(stations, charge_arr, charge_QoQ_arr, chart_config=None ):
                  color=line_label_color, fontsize=fontsize)
 
     # 标题和图例
-    fig.suptitle('充电站电费及环比变化')
+    fig.suptitle(chart_config.get("subtitle", '这是一个默认的title'))
     ax1.legend(loc='upper left')
     ax2.legend(loc='upper right')
 
-    plt.show()
-
+    # plt.show()
+    plt.savefig(chart_config.get("export_name", '这是一个默认的导出名称'), format="jpg", dpi=300)
 
 # draw_stat_chart()

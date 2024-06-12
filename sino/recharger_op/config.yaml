@@ -43,3 +43,9 @@ chart_config:
   line_label_x_offset : 0.35  # 调整偏移量，使其与柱状图脱离重叠
   line_label_y_offset : -2  # 设置 y 轴方向的偏移量
   fontsize : 18
+  subtitle : 充电站电费及环比变化
+  bar_label: 充电量
+  y1label: 充电量(万度)
+  line_lable: 充电量环比
+  y2label: 充电量环比(%)
+  export_name: '20240301-20240310.jpg'
